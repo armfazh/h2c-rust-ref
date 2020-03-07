@@ -1,0 +1,24 @@
+[package]
+name = "h2c-rust-ref"
+version = "0.1.0"
+authors = ["armfazh <armfazh@cloudflare.com>"]
+edition = "2018"
+description = "hash to curve reference implementation"
+keywords = ["elliptic curve", "math", "crypto", "ecc", "elliptic", "hash to curve"]
+categories = ["cryptography"]
+readme = "readme.md"
+license = "BSD-3-Clause"
+
+[[bench]]
+name = "h2c"
+harness = false
+
+[dependencies]
+num-bigint = "0.2.6"
+sha2 = "0.8.1"
+hkdf = "0.8.0"
+digest = "0.8.1"
+redox-ecc = { git = "https://github.com/armfazh/redox-ecc", branch= "eccOnly" }
+
+[dev-dependencies]
+criterion = "0.3"
