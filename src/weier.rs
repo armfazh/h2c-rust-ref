@@ -1,31 +1,58 @@
+use crate::api::GetHashToCurve;
+use std::collections::HashMap;
+
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve};
-use redox_ecc::field::{FromFactory, Sgn0Endianness};
+use redox_ecc::field::Sgn0Endianness;
 use redox_ecc::instances::{GetCurve, WeCurveID, P256, P384, P521, SECP256K1};
+use redox_ecc::ops::FromFactory;
 use redox_ecc::weierstrass::{Curve, SSWU, SVDW};
 
 use crate::api::{Encoding, HashID, HashToCurve, MapID, Suite};
+use crate::register_in_map;
 
-impl Suite<WeCurveID> {
-    pub fn get(&self, dst: &[u8]) -> impl HashToCurve<E = Curve> {
+impl GetHashToCurve for Suite<WeCurveID> {
+    type E = Curve;
+    fn get(&self, dst: &[u8]) -> Box<dyn HashToCurve<E = Self::E>> {
         let dst = dst.to_vec();
-        let e = self.curve.get();
-        let f = e.get_field();
-        let cofactor = e.new_scalar(e.get_cofactor());
+        let curve = self.curve.get();
+        let f = curve.get_field();
+        let hash_to_field = Box::new(f.clone());
+        let cofactor = curve.new_scalar(curve.get_cofactor());
         let map_to_curve: Box<dyn MapToCurve<E = Curve>> = match self.map {
-            MapID::SSWU(z, s) => Box::new(SSWU::new(e, f.from(z), s)),
-            MapID::SVDW(z, s) => Box::new(SVDW::new(e, f.from(z), s)),
+            MapID::SSWU(z, s) => Box::new(SSWU::new(curve.clone(), f.from(z), s)),
+            MapID::SVDW(z, s) => Box::new(SVDW::new(curve.clone(), f.from(z), s)),
             _ => unimplemented!(),
         };
-        Encoding {
-            hash_to_field: Box::new(f),
+        Box::new(Encoding {
+            curve,
+            hash_to_field,
             dst,
             map_to_curve,
             cofactor,
             h: self.h,
             l: self.l,
             ro: self.ro,
-        }
+        })
     }
+}
+
+lazy_static! {
+    pub static ref SUITES_WEIERSTRASS: HashMap<String, Suite<WeCurveID>> = register_in_map!([
+        // SECP256K1_SHA256_SSWU_RO_,
+        // SECP256K1_SHA256_SSWU_NU_,
+        P256_SHA256_SSWU_NU_,
+        P256_SHA256_SSWU_RO_,
+        P256_SHA256_SVDW_NU_,
+        P256_SHA256_SVDW_RO_,
+        P384_SHA512_SSWU_NU_,
+        P384_SHA512_SSWU_RO_,
+        P384_SHA512_SVDW_NU_,
+        P384_SHA512_SVDW_RO_,
+        P521_SHA512_SSWU_NU_,
+        P521_SHA512_SSWU_RO_,
+        P521_SHA512_SVDW_NU_,
+        P521_SHA512_SVDW_RO_
+    ]);
 }
 
 pub static P256_SHA256_SSWU_NU_: Suite<WeCurveID> = Suite {

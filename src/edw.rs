@@ -1,20 +1,26 @@
+use std::collections::HashMap;
+
 use redox_ecc::edwards::{Curve as EdCurve, Ell2};
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve, RationalMap};
-use redox_ecc::field::{FromFactory, Sgn0Endianness};
+use redox_ecc::field::Sgn0Endianness;
 use redox_ecc::instances::{
     edwards25519_to_curve25519, edwards448_to_curve448, EdCurveID, GetCurve, EDWARDS25519,
     EDWARDS448,
 };
 use redox_ecc::montgomery::Curve as MtCurve;
+use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, HashID, HashToCurve, MapID, Suite};
+use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, MapID, Suite};
+use crate::register_in_map;
 
-impl Suite<EdCurveID> {
-    pub fn get(&self, dst: &[u8]) -> impl HashToCurve<E = EdCurve> {
+impl GetHashToCurve for Suite<EdCurveID> {
+    type E = EdCurve;
+    fn get(&self, dst: &[u8]) -> Box<dyn HashToCurve<E = Self::E>> {
         let dst = dst.to_vec();
-        let e = self.curve.get();
-        let f = e.get_field();
-        let cofactor = e.new_scalar(e.get_cofactor());
+        let curve = self.curve.get();
+        let f = curve.get_field();
+        let hash_to_field = Box::new(f.clone());
+        let cofactor = curve.new_scalar(curve.get_cofactor());
         let ratmap: Option<Box<dyn RationalMap<E0 = EdCurve, E1 = MtCurve>>> =
             if self.curve == EDWARDS25519 {
                 Some(Box::new(edwards25519_to_curve25519()))
@@ -24,19 +30,31 @@ impl Suite<EdCurveID> {
                 None
             };
         let map_to_curve: Box<dyn MapToCurve<E = EdCurve>> = match self.map {
-            MapID::ELL2(z, s) => Box::new(Ell2::new(e, f.from(z), s, ratmap)),
+            MapID::ELL2(z, s) => Box::new(Ell2::new(curve.clone(), f.from(z), s, ratmap)),
             _ => unimplemented!(),
         };
-        Encoding {
-            hash_to_field: Box::new(f),
+        Box::new(Encoding {
+            curve,
+            hash_to_field,
             dst,
             map_to_curve,
             cofactor,
             h: self.h,
             l: self.l,
             ro: self.ro,
-        }
+        })
     }
+}
+
+lazy_static! {
+    pub static ref SUITES_EDWARDS: HashMap<String, Suite<EdCurveID>> = register_in_map!([
+        EDWARDS25519_SHA256_EDELL2_NU_,
+        EDWARDS25519_SHA256_EDELL2_RO_,
+        EDWARDS25519_SHA512_EDELL2_NU_,
+        EDWARDS25519_SHA512_EDELL2_RO_,
+        EDWARDS448_SHA512_EDELL2_NU_,
+        EDWARDS448_SHA512_EDELL2_RO_
+    ]);
 }
 
 pub static EDWARDS25519_SHA256_EDELL2_NU_: Suite<EdCurveID> = Suite {

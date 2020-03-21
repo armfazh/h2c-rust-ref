@@ -21,7 +21,10 @@ serde = "1.0.104"
 serde_json = "1.0.48"
 serde_derive = "1.0.104"
 digest = "0.8.1"
-redox-ecc = { git = "https://github.com/armfazh/redox-ecc", branch= "eccOnly" }
+lazy_static = "1.4.0"
+# redox-ecc = { git = "https://github.com/armfazh/redox-ecc", branch= "eccOnly" }
+redox-ecc = { path = "/home/armfazh/encodings/redox-ecc" }
 
 [dev-dependencies]
 criterion = "0.3"
+libtest-mimic = "0.2.0"

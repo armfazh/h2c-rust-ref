@@ -2,15 +2,17 @@ extern crate num_bigint;
 
 use criterion::{criterion_group, criterion_main, Benchmark, Criterion};
 
-use h2c_rust_ref::{HashToCurve, P256_SHA256_SSWU_NU_, P384_SHA512_SSWU_NU_, P521_SHA512_SSWU_NU_};
+use h2c_rust_ref::{
+    GetHashToCurve, P256_SHA256_SSWU_RO_, P384_SHA512_SSWU_RO_, P521_SHA512_SSWU_RO_,
+};
 
 fn h2c(c: &mut Criterion) {
     let msg = b"message to be hashed";
     let dst = b"domain separation tag";
     for suite in [
-        P256_SHA256_SSWU_NU_,
-        P384_SHA512_SSWU_NU_,
-        P521_SHA512_SSWU_NU_,
+        P256_SHA256_SSWU_RO_,
+        P384_SHA512_SSWU_RO_,
+        P521_SHA512_SSWU_RO_,
     ]
     .iter()
     {
