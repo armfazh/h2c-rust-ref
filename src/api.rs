@@ -75,6 +75,7 @@ where
 #[derive(Copy, Clone)]
 pub enum MapID {
     SSWU(i32, Sgn0Endianness),
+    SSWUAB0(i32, Sgn0Endianness),
     SVDW(i32, Sgn0Endianness),
     ELL2(i32, Sgn0Endianness),
 }
