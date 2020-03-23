@@ -8,7 +8,7 @@
 //! # Hash to Curve
 //!
 //! ```
-//!  use h2c_rust_ref::{HashToCurve,GetHashToCurve};
+//!  use h2c_rust_ref::GetHashToCurve;
 //!  use h2c_rust_ref::{EDWARDS25519_SHA512_EDELL2_RO_,P256_SHA256_SSWU_RO_};
 //!  let msg = b"Message string";
 //!  let dst = b"Domain separation tag";
