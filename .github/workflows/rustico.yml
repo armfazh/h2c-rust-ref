@@ -1,6 +1,6 @@
 name: Rustico
 
-on: [pull_request_review]
+on: [pull_request, push]
 
 jobs:
   Testing:
@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Building
-      run: cargo build --verbose
+      run: cargo build
     - name: Testing
-      run: cargo test --verbose
+      run: cargo test
