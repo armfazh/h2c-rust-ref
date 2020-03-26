@@ -1,0 +1,77 @@
+{
+  "L": "0x30",
+  "Z": "0xffffffff00000001000000000000000000000000fffffffffffffffffffffff5",
+  "ciphersuite": "P256_XMD:SHA-256_SSWU_NU_",
+  "curve": "P256",
+  "dst": "P256_XMD:SHA-256_SSWU_NU_TESTGEN",
+  "expand": "XMD",
+  "field": {
+    "m": "0x1",
+    "p": "0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+  },
+  "hash": "sha256",
+  "k": "0x80",
+  "map": {
+    "name": "SSWU",
+    "sgn0": "sgn0_le"
+  },
+  "randomOracle": false,
+  "vectors": [
+    {
+      "P": {
+        "x": "0x2b1b6eb1989d3fb644a4d2962e5adab24444abf37963e3ee5c3a47aa864c0899",
+        "y": "0x6b49f459088caf7588cde4650fba46f72870fe5bde98d170153bd83d467caddc"
+      },
+      "Q": {
+        "x": "0x2b1b6eb1989d3fb644a4d2962e5adab24444abf37963e3ee5c3a47aa864c0899",
+        "y": "0x6b49f459088caf7588cde4650fba46f72870fe5bde98d170153bd83d467caddc"
+      },
+      "msg": "",
+      "u": [
+        "0x84bc3167da0939bc7130e749558acfa0001eaf26990b6f9565a88272edb162a6"
+      ]
+    },
+    {
+      "P": {
+        "x": "0x3a7c9353213d23c67286117b783863d0fcf0741df89680eb8678dc3482aa4294",
+        "y": "0xd023fd86e73e383327ebb25b1fc3980d0048c2c31a9927a6585ffb127f8b4262"
+      },
+      "Q": {
+        "x": "0x3a7c9353213d23c67286117b783863d0fcf0741df89680eb8678dc3482aa4294",
+        "y": "0xd023fd86e73e383327ebb25b1fc3980d0048c2c31a9927a6585ffb127f8b4262"
+      },
+      "msg": "abc",
+      "u": [
+        "0x03f880f3c4b02f3afdfbb79f5a68f52a52dda11bb18bc615693cc39e88eaef0e"
+      ]
+    },
+    {
+      "P": {
+        "x": "0xdc152e051787dfe673e1bfe48a72c5814c559e66c8e1a369084cbe73929d0ae3",
+        "y": "0x12162397d8f3235e978e7aca400f78135f3de76b8f58c1fe4bf39ad4be424e0f"
+      },
+      "Q": {
+        "x": "0xdc152e051787dfe673e1bfe48a72c5814c559e66c8e1a369084cbe73929d0ae3",
+        "y": "0x12162397d8f3235e978e7aca400f78135f3de76b8f58c1fe4bf39ad4be424e0f"
+      },
+      "msg": "abcdef0123456789",
+      "u": [
+        "0x6d895387b21ede1286f10a00bdc9543c2c33e3075287015ad5049486aafc8155"
+      ]
+    },
+    {
+      "P": {
+        "x": "0xbdff5810ac42130719752d50ccc5f79e169e90a90cda984c311f6bad8e77fb44",
+        "y": "0x73aa23cfb08dd1ed92d770152d59b7e2b63176ceb664bdcae8153d83609dd2e5"
+      },
+      "Q": {
+        "x": "0xbdff5810ac42130719752d50ccc5f79e169e90a90cda984c311f6bad8e77fb44",
+        "y": "0x73aa23cfb08dd1ed92d770152d59b7e2b63176ceb664bdcae8153d83609dd2e5"
+      },
+      "msg": "a512_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "u": [
+        "0x91cb15a547813dad8255626afab8db2937bf9136e3e140a2281dda77568f0ae3"
+      ]
+    }
+  ]
+}

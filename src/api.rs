@@ -5,16 +5,13 @@ use redox_ecc::instances::GetCurve;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HashID {
     SHA256,
-    SHA384,
     SHA512,
 }
 
 /// HashToField hashes a string msg of any length into an element of a field F.
-/// This function is parametrized by a cryptographic hash function.
 pub trait HashToField {
     type F: Field;
-    fn hash(&self, h: HashID, msg: &[u8], dst: &[u8], ctr: u8, l: usize)
-        -> <Self::F as Field>::Elt;
+    fn hash(&self, msg: &[u8], count: usize) -> Vec<<Self::F as Field>::Elt>;
 }
 
 pub trait GetHashToCurve {
@@ -35,12 +32,9 @@ where
     EE: EllipticCurve,
 {
     pub(crate) curve: EE,
-    pub(crate) dst: Vec<u8>,
-    pub(crate) h: HashID,
     pub(crate) map_to_curve: Box<dyn MapToCurve<E = EE> + 'static>,
     pub(crate) hash_to_field: Box<dyn HashToField<F = <EE as EllipticCurve>::F> + 'static>,
     pub(crate) cofactor: <EE as EllipticCurve>::Scalar,
-    pub(crate) l: usize,
     pub(crate) ro: bool,
 }
 
@@ -59,14 +53,13 @@ where
     }
     fn hash(&self, msg: &[u8]) -> <Self::E as EllipticCurve>::Point {
         let p = if self.ro {
-            let u0 = self.hash_to_field.hash(self.h, msg, &self.dst, 0u8, self.l);
-            let u1 = self.hash_to_field.hash(self.h, msg, &self.dst, 1u8, self.l);
-            let p0 = self.map_to_curve.map(&u0);
-            let p1 = self.map_to_curve.map(&u1);
+            let u = self.hash_to_field.hash(msg, 2);
+            let p0 = self.map_to_curve.map(&u[0]);
+            let p1 = self.map_to_curve.map(&u[1]);
             p0 + p1
         } else {
-            let u = self.hash_to_field.hash(self.h, msg, &self.dst, 2u8, self.l);
-            self.map_to_curve.map(&u)
+            let u = self.hash_to_field.hash(msg, 1);
+            self.map_to_curve.map(&u[0])
         };
         p * &self.cofactor
     }

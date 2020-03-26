@@ -10,16 +10,15 @@ use redox_ecc::instances::{
 use redox_ecc::montgomery::Curve as MtCurve;
 use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, MapID, Suite};
+use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
+use crate::fp::{Expander, ExpanderXmd, FpHasher};
 use crate::register_in_map;
 
 impl GetHashToCurve for Suite<EdCurveID> {
     type E = EdCurve;
     fn get(&self, dst: &[u8]) -> Box<dyn HashToCurve<E = Self::E>> {
-        let dst = dst.to_vec();
         let curve = self.curve.get();
         let f = curve.get_field();
-        let hash_to_field = Box::new(f.clone());
         let cofactor = curve.new_scalar(curve.get_cofactor());
         let ratmap: Option<Box<dyn RationalMap<E0 = EdCurve, E1 = MtCurve>>> =
             if self.curve == EDWARDS25519 {
@@ -33,14 +32,18 @@ impl GetHashToCurve for Suite<EdCurveID> {
             MapID::ELL2(z, s) => Box::new(Ell2::new(curve.clone(), f.from(z), s, ratmap)),
             _ => unimplemented!(),
         };
+        let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {
+            dst: dst.to_vec(),
+            id: self.h,
+        });
+        exp.shorten_dst();
+        let hash_to_field: Box<dyn HashToField<F = <EdCurve as EllipticCurve>::F>> =
+            Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
             curve,
             hash_to_field,
-            dst,
             map_to_curve,
             cofactor,
-            h: self.h,
-            l: self.l,
             ro: self.ro,
         })
     }
@@ -48,53 +51,53 @@ impl GetHashToCurve for Suite<EdCurveID> {
 
 lazy_static! {
     pub static ref SUITES_EDWARDS: HashMap<String, Suite<EdCurveID>> = register_in_map!([
-        EDWARDS25519_SHA256_EDELL2_NU_,
-        EDWARDS25519_SHA256_EDELL2_RO_,
-        EDWARDS25519_SHA512_EDELL2_NU_,
-        EDWARDS25519_SHA512_EDELL2_RO_,
-        EDWARDS448_SHA512_EDELL2_NU_,
-        EDWARDS448_SHA512_EDELL2_RO_
+        EDWARDS25519_XMDSHA256_ELL2_NU_,
+        EDWARDS25519_XMDSHA256_ELL2_RO_,
+        EDWARDS25519_XMDSHA512_ELL2_NU_,
+        EDWARDS25519_XMDSHA512_ELL2_RO_,
+        EDWARDS448_XMDSHA512_ELL2_NU_,
+        EDWARDS448_XMDSHA512_ELL2_RO_
     ]);
 }
 
-pub static EDWARDS25519_SHA256_EDELL2_NU_: Suite<EdCurveID> = Suite {
-    name: "edwards25519-SHA256-EDELL2-NU-",
+pub static EDWARDS25519_XMDSHA256_ELL2_NU_: Suite<EdCurveID> = Suite {
+    name: "edwards25519_XMD:SHA-256_ELL2_NU_",
     curve: EDWARDS25519,
     h: HashID::SHA256,
     map: MapID::ELL2(2, Sgn0Endianness::LittleEndian),
     l: 48,
     ro: false,
 };
-pub static EDWARDS25519_SHA256_EDELL2_RO_: Suite<EdCurveID> = Suite {
-    name: "edwards25519-SHA256-EDELL2-RO-",
+pub static EDWARDS25519_XMDSHA256_ELL2_RO_: Suite<EdCurveID> = Suite {
+    name: "edwards25519_XMD:SHA-256_ELL2_RO_",
     ro: true,
-    ..EDWARDS25519_SHA256_EDELL2_NU_
+    ..EDWARDS25519_XMDSHA256_ELL2_NU_
 };
 
-pub static EDWARDS25519_SHA512_EDELL2_NU_: Suite<EdCurveID> = Suite {
-    name: "edwards25519-SHA512-EDELL2-NU-",
+pub static EDWARDS25519_XMDSHA512_ELL2_NU_: Suite<EdCurveID> = Suite {
+    name: "edwards25519_XMD:SHA-512_ELL2_NU_",
     curve: EDWARDS25519,
     map: MapID::ELL2(2, Sgn0Endianness::LittleEndian),
     h: HashID::SHA512,
     l: 48,
     ro: false,
 };
-pub static EDWARDS25519_SHA512_EDELL2_RO_: Suite<EdCurveID> = Suite {
-    name: "edwards25519-SHA512-EDELL2-RO-",
+pub static EDWARDS25519_XMDSHA512_ELL2_RO_: Suite<EdCurveID> = Suite {
+    name: "edwards25519_XMD:SHA-512_ELL2_RO_",
     ro: true,
-    ..EDWARDS25519_SHA512_EDELL2_NU_
+    ..EDWARDS25519_XMDSHA512_ELL2_NU_
 };
 
-pub static EDWARDS448_SHA512_EDELL2_NU_: Suite<EdCurveID> = Suite {
-    name: "edwards448-SHA512-EDELL2-NU-",
+pub static EDWARDS448_XMDSHA512_ELL2_NU_: Suite<EdCurveID> = Suite {
+    name: "edwards448_XMD:SHA-512_ELL2_NU_",
     curve: EDWARDS448,
     map: MapID::ELL2(-1, Sgn0Endianness::LittleEndian),
     h: HashID::SHA512,
     l: 84,
     ro: false,
 };
-pub static EDWARDS448_SHA512_EDELL2_RO_: Suite<EdCurveID> = Suite {
-    name: "edwards448-SHA512-EDELL2-RO-",
+pub static EDWARDS448_XMDSHA512_ELL2_RO_: Suite<EdCurveID> = Suite {
+    name: "edwards448_XMD:SHA-512_ELL2_RO_",
     ro: true,
-    ..EDWARDS448_SHA512_EDELL2_NU_
+    ..EDWARDS448_XMDSHA512_ELL2_NU_
 };
