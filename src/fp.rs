@@ -55,13 +55,13 @@ impl Expander for ExpanderXmd {
         hasher.input(&z_pad);
         hasher.input(msg);
         hasher.input(lib_str);
-        hasher.input(&vec![0]);
+        hasher.input(&[0u8]);
         hasher.input(&dst_prime);
         let b0 = hasher.result_reset();
 
         hasher.reset();
         hasher.input(&b0);
-        hasher.input(&vec![1]);
+        hasher.input(&[1u8]);
         hasher.input(&dst_prime);
         let mut bi = hasher.result_reset();
 
@@ -70,7 +70,7 @@ impl Expander for ExpanderXmd {
         for i in 2..(ell + 1) {
             hasher.reset();
             hasher.input(&xor(&bi, &b0));
-            hasher.input(&vec![i as u8]);
+            hasher.input(&[i as u8]);
             hasher.input(&dst_prime);
             bi = hasher.result_reset();
             pseudo.extend_from_slice(&bi);
