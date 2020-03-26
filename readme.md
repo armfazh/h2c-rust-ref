@@ -23,7 +23,7 @@ including side-channel attacks. It **MUST NOT** be used in production systems.
 -   No specific architecture optimizations.
 -   No side-channel protection, see [Warning](#Warning) section.
 
-#### Development branch: [master](https://github.com/armfazh/h2c-go-ref/tree/master)
+#### Development branch: [master](https://github.com/armfazh/h2c-rust-ref/tree/master)
 
 #### Draft versions implemented:
  -   [v06](https://github.com/armfazh/h2c-rust-ref/tree/v6.0.0) (latest)
