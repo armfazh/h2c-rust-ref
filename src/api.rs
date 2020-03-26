@@ -17,10 +17,15 @@ pub trait HashToField {
         -> <Self::F as Field>::Elt;
 }
 
+pub trait GetHashToCurve {
+    type E: EllipticCurve;
+    fn get(&self, dst: &[u8]) -> Box<dyn HashToCurve<E = Self::E> + 'static>;
+}
 /// HashToCurve is a function that outputs a point on an elliptic curve from an
 /// arbitrary string.
 pub trait HashToCurve {
     type E: EllipticCurve;
+    fn get_curve(&self) -> &Self::E;
     fn is_random_oracle(&self) -> bool;
     fn hash(&self, msg: &[u8]) -> <Self::E as EllipticCurve>::Point;
 }
@@ -29,6 +34,7 @@ pub(crate) struct Encoding<EE>
 where
     EE: EllipticCurve,
 {
+    pub(crate) curve: EE,
     pub(crate) dst: Vec<u8>,
     pub(crate) h: HashID,
     pub(crate) map_to_curve: Box<dyn MapToCurve<E = EE> + 'static>,
@@ -40,9 +46,13 @@ where
 
 impl<EE> HashToCurve for Encoding<EE>
 where
-    EE: EllipticCurve,
+    EE: EllipticCurve + Clone,
 {
     type E = EE;
+    #[inline]
+    fn get_curve(&self) -> &Self::E {
+        &self.curve
+    }
     #[inline]
     fn is_random_oracle(&self) -> bool {
         self.ro
@@ -51,12 +61,12 @@ where
         let p = if self.ro {
             let u0 = self.hash_to_field.hash(self.h, msg, &self.dst, 0u8, self.l);
             let u1 = self.hash_to_field.hash(self.h, msg, &self.dst, 1u8, self.l);
-            let p0 = self.map_to_curve.map(u0);
-            let p1 = self.map_to_curve.map(u1);
+            let p0 = self.map_to_curve.map(&u0);
+            let p1 = self.map_to_curve.map(&u1);
             p0 + p1
         } else {
             let u = self.hash_to_field.hash(self.h, msg, &self.dst, 2u8, self.l);
-            self.map_to_curve.map(u)
+            self.map_to_curve.map(&u)
         };
         p * &self.cofactor
     }
@@ -65,6 +75,7 @@ where
 #[derive(Copy, Clone)]
 pub enum MapID {
     SSWU(i32, Sgn0Endianness),
+    SSWUAB0(i32, Sgn0Endianness),
     SVDW(i32, Sgn0Endianness),
     ELL2(i32, Sgn0Endianness),
 }
