@@ -138,7 +138,7 @@ pub static P521_XMDSHA512_SSWU_NU_: Suite<WeCurveID> = Suite {
     curve: P521,
     h: HashID::SHA512,
     map: MapID::SSWU(-4, Sgn0Endianness::LittleEndian),
-    l: 96,
+    l: 98,
     ro: false,
 };
 pub static P521_XMDSHA512_SSWU_RO_: Suite<WeCurveID> = Suite {
@@ -152,7 +152,7 @@ pub static P521_XMDSHA512_SVDW_NU_: Suite<WeCurveID> = Suite {
     curve: P521,
     h: HashID::SHA512,
     map: MapID::SVDW(1, Sgn0Endianness::LittleEndian),
-    l: 96,
+    l: 98,
     ro: false,
 };
 pub static P521_XMDSHA512_SVDW_RO_: Suite<WeCurveID> = Suite {

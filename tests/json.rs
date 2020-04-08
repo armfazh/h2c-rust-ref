@@ -22,7 +22,6 @@ pub struct Field {
 #[serde(rename_all = "camelCase")]
 pub struct Map {
     pub name: String,
-    pub sgn0: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
