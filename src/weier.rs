@@ -192,7 +192,7 @@ pub static SECP256K1_XMDSHA256_SVDW_RO_: Suite<WeCurveID> = Suite {
 pub static BLS12381G1_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SSWU_NU_",
     curve: BLS12381G1,
-    map: MapID::SSWUAB0(11, Sgn0Endianness::BigEndian),
+    map: MapID::SSWUAB0(11, Sgn0Endianness::LittleEndian),
     h: HashID::SHA256,
     l: 64,
     ro: false,
@@ -207,7 +207,7 @@ pub static BLS12381G1_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SVDW_NU_",
     curve: BLS12381G1,
     h: HashID::SHA256,
-    map: MapID::SVDW(-3, Sgn0Endianness::BigEndian),
+    map: MapID::SVDW(-3, Sgn0Endianness::LittleEndian),
     l: 64,
     ro: false,
 };
