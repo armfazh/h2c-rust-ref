@@ -36,7 +36,7 @@ impl GetHashToCurve for Suite<EdCurveID> {
             dst: dst.to_vec(),
             id: self.h,
         });
-        exp.shorten_dst();
+        exp.construct_dst_prime();
         let hash_to_field: Box<dyn HashToField<F = <EdCurve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
