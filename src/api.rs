@@ -1,5 +1,5 @@
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve};
-use redox_ecc::field::{Field, Sgn0Endianness};
+use redox_ecc::field::Field;
 use redox_ecc::instances::GetCurve;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -67,10 +67,10 @@ where
 
 #[derive(Copy, Clone)]
 pub enum MapID {
-    SSWU(i32, Sgn0Endianness),
-    SSWUAB0(i32, Sgn0Endianness),
-    SVDW(i32, Sgn0Endianness),
-    ELL2(i32, Sgn0Endianness),
+    SSWU(i32),
+    SSWUAB0(i32),
+    SVDW(i32),
+    ELL2(i32),
 }
 
 #[derive(Copy, Clone)]

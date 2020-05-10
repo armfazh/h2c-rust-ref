@@ -21,7 +21,7 @@ impl GetHashToCurve for Suite<WeCurveID> {
         let f = curve.get_field();
         let cofactor = curve.new_scalar(curve.get_cofactor());
         let map_to_curve: Box<dyn MapToCurve<E = Curve>> = match self.map {
-            MapID::SSWUAB0(z, s) => {
+            MapID::SSWUAB0(z) => {
                 let iso: Box<dyn Isogeny<E0 = Curve, E1 = Curve>> = if self.curve == SECP256K1 {
                     Box::new(get_isogeny_secp256k1())
                 } else if self.curve == BLS12381G1 {
@@ -29,10 +29,23 @@ impl GetHashToCurve for Suite<WeCurveID> {
                 } else {
                     unimplemented!()
                 };
-                Box::new(SSWUAB0::new(curve.clone(), f.from(z), s, iso))
+                Box::new(SSWUAB0::new(
+                    curve.clone(),
+                    f.from(z),
+                    Sgn0Endianness::LittleEndian,
+                    iso,
+                ))
             }
-            MapID::SSWU(z, s) => Box::new(SSWU::new(curve.clone(), f.from(z), s)),
-            MapID::SVDW(z, s) => Box::new(SVDW::new(curve.clone(), f.from(z), s)),
+            MapID::SSWU(z) => Box::new(SSWU::new(
+                curve.clone(),
+                f.from(z),
+                Sgn0Endianness::LittleEndian,
+            )),
+            MapID::SVDW(z) => Box::new(SVDW::new(
+                curve.clone(),
+                f.from(z),
+                Sgn0Endianness::LittleEndian,
+            )),
             _ => unimplemented!(),
         };
         let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {
@@ -81,7 +94,7 @@ pub static P256_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P256_XMD:SHA-256_SSWU_NU_",
     curve: P256,
     h: HashID::SHA256,
-    map: MapID::SSWU(-10, Sgn0Endianness::LittleEndian),
+    map: MapID::SSWU(-10),
     l: 48,
     ro: false,
 };
@@ -95,7 +108,7 @@ pub static P256_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P256_XMD:SHA-256_SVDW_NU_",
     curve: P256,
     h: HashID::SHA256,
-    map: MapID::SVDW(-3, Sgn0Endianness::LittleEndian),
+    map: MapID::SVDW(-3),
     l: 48,
     ro: false,
 };
@@ -109,7 +122,7 @@ pub static P384_XMDSHA512_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P384_XMD:SHA-512_SSWU_NU_",
     curve: P384,
     h: HashID::SHA512,
-    map: MapID::SSWU(-12, Sgn0Endianness::LittleEndian),
+    map: MapID::SSWU(-12),
     l: 72,
     ro: false,
 };
@@ -123,7 +136,7 @@ pub static P384_XMDSHA512_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P384_XMD:SHA-512_SVDW_NU_",
     curve: P384,
     h: HashID::SHA512,
-    map: MapID::SVDW(-1, Sgn0Endianness::LittleEndian),
+    map: MapID::SVDW(-1),
     l: 72,
     ro: false,
 };
@@ -137,7 +150,7 @@ pub static P521_XMDSHA512_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P521_XMD:SHA-512_SSWU_NU_",
     curve: P521,
     h: HashID::SHA512,
-    map: MapID::SSWU(-4, Sgn0Endianness::LittleEndian),
+    map: MapID::SSWU(-4),
     l: 98,
     ro: false,
 };
@@ -151,7 +164,7 @@ pub static P521_XMDSHA512_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P521_XMD:SHA-512_SVDW_NU_",
     curve: P521,
     h: HashID::SHA512,
-    map: MapID::SVDW(1, Sgn0Endianness::LittleEndian),
+    map: MapID::SVDW(1),
     l: 98,
     ro: false,
 };
@@ -164,7 +177,7 @@ pub static P521_XMDSHA512_SVDW_RO_: Suite<WeCurveID> = Suite {
 pub static SECP256K1_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "secp256k1_XMD:SHA-256_SSWU_NU_",
     curve: SECP256K1,
-    map: MapID::SSWUAB0(-11, Sgn0Endianness::LittleEndian),
+    map: MapID::SSWUAB0(-11),
     h: HashID::SHA256,
     l: 48,
     ro: false,
@@ -179,7 +192,7 @@ pub static SECP256K1_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "secp256k1_XMD:SHA-256_SVDW_NU_",
     curve: SECP256K1,
     h: HashID::SHA256,
-    map: MapID::SVDW(1, Sgn0Endianness::LittleEndian),
+    map: MapID::SVDW(1),
     l: 48,
     ro: false,
 };
@@ -192,7 +205,7 @@ pub static SECP256K1_XMDSHA256_SVDW_RO_: Suite<WeCurveID> = Suite {
 pub static BLS12381G1_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SSWU_NU_",
     curve: BLS12381G1,
-    map: MapID::SSWUAB0(11, Sgn0Endianness::LittleEndian),
+    map: MapID::SSWUAB0(11),
     h: HashID::SHA256,
     l: 64,
     ro: false,
@@ -207,7 +220,7 @@ pub static BLS12381G1_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SVDW_NU_",
     curve: BLS12381G1,
     h: HashID::SHA256,
-    map: MapID::SVDW(-3, Sgn0Endianness::LittleEndian),
+    map: MapID::SVDW(-3),
     l: 64,
     ro: false,
 };

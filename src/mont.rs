@@ -17,7 +17,11 @@ impl GetHashToCurve for Suite<MtCurveID> {
         let f = curve.get_field();
         let cofactor = curve.new_scalar(curve.get_cofactor());
         let map_to_curve: Box<dyn MapToCurve<E = Curve>> = match self.map {
-            MapID::ELL2(z, s) => Box::new(Ell2::new(curve.clone(), f.from(z), s)),
+            MapID::ELL2(z) => Box::new(Ell2::new(
+                curve.clone(),
+                f.from(z),
+                Sgn0Endianness::LittleEndian,
+            )),
             _ => unimplemented!(),
         };
         let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {
@@ -52,7 +56,7 @@ pub static CURVE25519_XMDSHA256_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve25519_XMD:SHA-256_ELL2_NU_",
     curve: CURVE25519,
     h: HashID::SHA256,
-    map: MapID::ELL2(2, Sgn0Endianness::LittleEndian),
+    map: MapID::ELL2(2),
     l: 48,
     ro: false,
 };
@@ -65,7 +69,7 @@ pub static CURVE25519_XMDSHA256_ELL2_RO_: Suite<MtCurveID> = Suite {
 pub static CURVE25519_XMDSHA512_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve25519_XMD:SHA-512_ELL2_NU_",
     curve: CURVE25519,
-    map: MapID::ELL2(2, Sgn0Endianness::LittleEndian),
+    map: MapID::ELL2(2),
     h: HashID::SHA512,
     l: 48,
     ro: false,
@@ -79,7 +83,7 @@ pub static CURVE25519_XMDSHA512_ELL2_RO_: Suite<MtCurveID> = Suite {
 pub static CURVE448_XMDSHA512_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve448_XMD:SHA-512_ELL2_NU_",
     curve: CURVE448,
-    map: MapID::ELL2(-1, Sgn0Endianness::LittleEndian),
+    map: MapID::ELL2(-1),
     h: HashID::SHA512,
     l: 84,
     ro: false,
