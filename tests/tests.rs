@@ -18,7 +18,7 @@ fn vectors() {
     let mut tests_edwards = Vec::<Test<SuiteVector>>::new();
     let mut tests_ignored = Vec::<Test<SuiteVector>>::new();
 
-    for filename in read_dir("./tests/testdata").unwrap() {
+    for filename in read_dir("./tests/testdata/suites").unwrap() {
         let file = File::open(filename.unwrap().path()).unwrap();
         let u: SuiteVector = serde_json::from_reader(BufReader::new(file)).unwrap();
         let key = u.ciphersuite.clone();
