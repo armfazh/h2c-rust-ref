@@ -11,8 +11,8 @@ use redox_ecc::instances::{
 use redox_ecc::montgomery::Curve as MtCurve;
 use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
-use crate::expander::{Expander, ExpanderXmd};
+use crate::api::{Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
+use crate::expander::{Expander, ExpanderXmd, ExpanderXof};
 use crate::fp::FpHasher;
 use crate::register_in_map;
 
@@ -34,11 +34,19 @@ impl GetHashToCurve for Suite<EdCurveID> {
             MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z), ratmap)),
             _ => unimplemented!(),
         };
-        let exp: Box<dyn Expander> = Box::new(ExpanderXmd {
-            dst: dst.to_vec(),
-            dst_prime: AtomicRefCell::new(None),
-            id: self.h,
-        });
+        let exp: Box<dyn Expander> = match self.exp {
+            ExpID::XMD(h) => Box::new(ExpanderXmd {
+                dst: dst.to_vec(),
+                dst_prime: AtomicRefCell::new(None),
+                id: h,
+            }),
+            ExpID::XOF(x) => Box::new(ExpanderXof {
+                dst: dst.to_vec(),
+                k: Some(self.k),
+                dst_prime: AtomicRefCell::new(None),
+                id: x,
+            }),
+        };
         let hash_to_field: Box<dyn HashToField<F = <EdCurve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
@@ -65,7 +73,8 @@ lazy_static! {
 pub static EDWARDS25519_XMDSHA256_ELL2_NU_: Suite<EdCurveID> = Suite {
     name: "edwards25519_XMD:SHA-256_ELL2_NU_",
     curve: EDWARDS25519,
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     map: MapID::ELL2(2),
     l: 48,
     ro: false,
@@ -80,7 +89,8 @@ pub static EDWARDS25519_XMDSHA512_ELL2_NU_: Suite<EdCurveID> = Suite {
     name: "edwards25519_XMD:SHA-512_ELL2_NU_",
     curve: EDWARDS25519,
     map: MapID::ELL2(2),
-    h: HashID::SHA512,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA512),
     l: 48,
     ro: false,
 };
@@ -94,7 +104,8 @@ pub static EDWARDS448_XMDSHA512_ELL2_NU_: Suite<EdCurveID> = Suite {
     name: "edwards448_XMD:SHA-512_ELL2_NU_",
     curve: EDWARDS448,
     map: MapID::ELL2(-1),
-    h: HashID::SHA512,
+    k: 224,
+    exp: ExpID::XMD(HashID::SHA512),
     l: 84,
     ro: false,
 };

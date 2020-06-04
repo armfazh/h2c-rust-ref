@@ -7,8 +7,8 @@ use redox_ecc::instances::{GetCurve, MtCurveID, CURVE25519, CURVE448};
 use redox_ecc::montgomery::{Curve, Ell2};
 use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
-use crate::expander::{Expander, ExpanderXmd};
+use crate::api::{Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
+use crate::expander::{Expander, ExpanderXmd, ExpanderXof};
 use crate::fp::FpHasher;
 use crate::register_in_map;
 
@@ -22,11 +22,19 @@ impl GetHashToCurve for Suite<MtCurveID> {
             MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z))),
             _ => unimplemented!(),
         };
-        let exp: Box<dyn Expander> = Box::new(ExpanderXmd {
-            dst: dst.to_vec(),
-            dst_prime: AtomicRefCell::new(None),
-            id: self.h,
-        });
+        let exp: Box<dyn Expander> = match self.exp {
+            ExpID::XMD(h) => Box::new(ExpanderXmd {
+                dst: dst.to_vec(),
+                dst_prime: AtomicRefCell::new(None),
+                id: h,
+            }),
+            ExpID::XOF(x) => Box::new(ExpanderXof {
+                dst: dst.to_vec(),
+                k: Some(self.k),
+                dst_prime: AtomicRefCell::new(None),
+                id: x,
+            }),
+        };
         let hash_to_field: Box<dyn HashToField<F = <Curve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
@@ -53,8 +61,9 @@ lazy_static! {
 pub static CURVE25519_XMDSHA256_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve25519_XMD:SHA-256_ELL2_NU_",
     curve: CURVE25519,
-    h: HashID::SHA256,
     map: MapID::ELL2(2),
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     l: 48,
     ro: false,
 };
@@ -68,7 +77,8 @@ pub static CURVE25519_XMDSHA512_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve25519_XMD:SHA-512_ELL2_NU_",
     curve: CURVE25519,
     map: MapID::ELL2(2),
-    h: HashID::SHA512,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA512),
     l: 48,
     ro: false,
 };
@@ -82,7 +92,8 @@ pub static CURVE448_XMDSHA512_ELL2_NU_: Suite<MtCurveID> = Suite {
     name: "curve448_XMD:SHA-512_ELL2_NU_",
     curve: CURVE448,
     map: MapID::ELL2(-1),
-    h: HashID::SHA512,
+    k: 224,
+    exp: ExpID::XMD(HashID::SHA512),
     l: 84,
     ro: false,
 };

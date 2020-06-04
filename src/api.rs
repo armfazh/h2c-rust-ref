@@ -8,6 +8,11 @@ pub enum HashID {
     SHA512,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum XofID {
+    SHAKE128,
+}
+
 /// HashToField hashes a string msg of any length into an element of a field F.
 pub trait HashToField {
     type F: Field;
@@ -74,6 +79,12 @@ pub enum MapID {
 }
 
 #[derive(Copy, Clone)]
+pub enum ExpID {
+    XMD(HashID),
+    XOF(XofID),
+}
+
+#[derive(Copy, Clone)]
 pub struct Suite<T>
 where
     T: GetCurve,
@@ -81,7 +92,8 @@ where
     pub(super) curve: T,
     pub(super) name: &'static str,
     pub(super) map: MapID,
-    pub(super) h: HashID,
+    pub(super) exp: ExpID,
+    pub(super) k: usize,
     pub(super) l: usize,
     pub(super) ro: bool,
 }

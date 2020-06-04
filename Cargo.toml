@@ -1,6 +1,6 @@
 [package]
 name = "h2c-rust-ref"
-version = "7.0.0"
+version = "8.0.0"
 authors = ["armfazh <armfazh@cloudflare.com>"]
 edition = "2018"
 description = "hash to curve reference implementation"
@@ -18,7 +18,8 @@ atomic_refcell = "0.1.6"
 digest = "0.8.1"
 lazy_static = "1.4.0"
 num-bigint = "0.2.6"
-sha2 = "0.8.1"
+sha2 = "0.8.2"
+sha3 = "0.8.2"
 redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.2" }
 
 [dev-dependencies]

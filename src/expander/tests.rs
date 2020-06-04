@@ -4,13 +4,14 @@ use libtest_mimic::{run_tests, Arguments, Outcome, Test};
 use std::fs::{read_dir, File};
 use std::io::BufReader;
 
-use crate::api::HashID;
-use crate::expander::{Expander, ExpanderXmd};
+use crate::api::{HashID, XofID};
+use crate::expander::{Expander, ExpanderXmd, ExpanderXof};
 
 #[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct ExpanderVector {
     #[serde(rename = "DST")]
     pub dst: String,
+    pub k: Option<usize>,
     pub hash: String,
     pub name: String,
     #[serde(rename = "tests")]
@@ -60,7 +61,12 @@ fn do_test(Test { data, .. }: &Test<ExpanderVector>) -> Outcome {
             dst_prime: AtomicRefCell::new(None),
             id: HashID::SHA512,
         }),
-        "SHAKE_128" => return Outcome::Ignored,
+        "SHAKE_128" => Box::new(ExpanderXof {
+            dst: Vec::from(data.dst.as_bytes()),
+            k: data.k,
+            dst_prime: AtomicRefCell::new(None),
+            id: XofID::SHAKE128,
+        }),
         _ => unimplemented!(),
     };
     for v in data.vectors.iter() {

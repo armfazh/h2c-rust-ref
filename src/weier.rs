@@ -10,8 +10,10 @@ use redox_ecc::instances::{
 use redox_ecc::ops::FromFactory;
 use redox_ecc::weierstrass::{Curve, SSWU, SSWUAB0, SVDW};
 
-use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
-use crate::expander::{Expander, ExpanderXmd};
+use crate::api::{
+    Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite, XofID,
+};
+use crate::expander::{Expander, ExpanderXmd, ExpanderXof};
 use crate::fp::FpHasher;
 use crate::register_in_map;
 
@@ -37,11 +39,19 @@ impl GetHashToCurve for Suite<WeCurveID> {
             MapID::SVDW(z) => Box::new(SVDW::new(curve.clone(), f.from(z))),
             _ => unimplemented!(),
         };
-        let exp: Box<dyn Expander> = Box::new(ExpanderXmd {
-            dst: dst.to_vec(),
-            dst_prime: AtomicRefCell::new(None),
-            id: self.h,
-        });
+        let exp: Box<dyn Expander> = match self.exp {
+            ExpID::XMD(h) => Box::new(ExpanderXmd {
+                dst: dst.to_vec(),
+                dst_prime: AtomicRefCell::new(None),
+                id: h,
+            }),
+            ExpID::XOF(x) => Box::new(ExpanderXof {
+                dst: dst.to_vec(),
+                k: Some(self.k),
+                dst_prime: AtomicRefCell::new(None),
+                id: x,
+            }),
+        };
         let hash_to_field: Box<dyn HashToField<F = <Curve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
@@ -58,6 +68,8 @@ lazy_static! {
     pub static ref SUITES_WEIERSTRASS: HashMap<String, Suite<WeCurveID>> = register_in_map!([
         P256_XMDSHA256_SSWU_NU_,
         P256_XMDSHA256_SSWU_RO_,
+        P256_XMDSHAKE128_SSWU_NU_,
+        P256_XMDSHAKE128_SSWU_RO_,
         P256_XMDSHA256_SVDW_NU_,
         P256_XMDSHA256_SVDW_RO_,
         P384_XMDSHA512_SSWU_NU_,
@@ -82,7 +94,8 @@ lazy_static! {
 pub static P256_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P256_XMD:SHA-256_SSWU_NU_",
     curve: P256,
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     map: MapID::SSWU(-10),
     l: 48,
     ro: false,
@@ -93,10 +106,26 @@ pub static P256_XMDSHA256_SSWU_RO_: Suite<WeCurveID> = Suite {
     ..P256_XMDSHA256_SSWU_NU_
 };
 
+pub static P256_XMDSHAKE128_SSWU_NU_: Suite<WeCurveID> = Suite {
+    name: "P256_XMD:SHAKE128_SSWU_NU_",
+    curve: P256,
+    k: 128,
+    exp: ExpID::XOF(XofID::SHAKE128),
+    map: MapID::SSWU(-10),
+    l: 48,
+    ro: false,
+};
+pub static P256_XMDSHAKE128_SSWU_RO_: Suite<WeCurveID> = Suite {
+    name: "P256_XMD:SHAKE128_SSWU_RO_",
+    ro: true,
+    ..P256_XMDSHAKE128_SSWU_NU_
+};
+
 pub static P256_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P256_XMD:SHA-256_SVDW_NU_",
     curve: P256,
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     map: MapID::SVDW(-3),
     l: 48,
     ro: false,
@@ -110,7 +139,8 @@ pub static P256_XMDSHA256_SVDW_RO_: Suite<WeCurveID> = Suite {
 pub static P384_XMDSHA512_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P384_XMD:SHA-512_SSWU_NU_",
     curve: P384,
-    h: HashID::SHA512,
+    k: 192,
+    exp: ExpID::XMD(HashID::SHA512),
     map: MapID::SSWU(-12),
     l: 72,
     ro: false,
@@ -124,7 +154,8 @@ pub static P384_XMDSHA512_SSWU_RO_: Suite<WeCurveID> = Suite {
 pub static P384_XMDSHA512_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P384_XMD:SHA-512_SVDW_NU_",
     curve: P384,
-    h: HashID::SHA512,
+    k: 192,
+    exp: ExpID::XMD(HashID::SHA512),
     map: MapID::SVDW(-1),
     l: 72,
     ro: false,
@@ -138,7 +169,8 @@ pub static P384_XMDSHA512_SVDW_RO_: Suite<WeCurveID> = Suite {
 pub static P521_XMDSHA512_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "P521_XMD:SHA-512_SSWU_NU_",
     curve: P521,
-    h: HashID::SHA512,
+    k: 256,
+    exp: ExpID::XMD(HashID::SHA512),
     map: MapID::SSWU(-4),
     l: 98,
     ro: false,
@@ -152,7 +184,8 @@ pub static P521_XMDSHA512_SSWU_RO_: Suite<WeCurveID> = Suite {
 pub static P521_XMDSHA512_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "P521_XMD:SHA-512_SVDW_NU_",
     curve: P521,
-    h: HashID::SHA512,
+    k: 256,
+    exp: ExpID::XMD(HashID::SHA512),
     map: MapID::SVDW(1),
     l: 98,
     ro: false,
@@ -167,7 +200,8 @@ pub static SECP256K1_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "secp256k1_XMD:SHA-256_SSWU_NU_",
     curve: SECP256K1,
     map: MapID::SSWUAB0(-11),
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     l: 48,
     ro: false,
 };
@@ -180,7 +214,8 @@ pub static SECP256K1_XMDSHA256_SSWU_RO_: Suite<WeCurveID> = Suite {
 pub static SECP256K1_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "secp256k1_XMD:SHA-256_SVDW_NU_",
     curve: SECP256K1,
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     map: MapID::SVDW(1),
     l: 48,
     ro: false,
@@ -195,7 +230,8 @@ pub static BLS12381G1_XMDSHA256_SSWU_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SSWU_NU_",
     curve: BLS12381G1,
     map: MapID::SSWUAB0(11),
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     l: 64,
     ro: false,
 };
@@ -208,7 +244,8 @@ pub static BLS12381G1_XMDSHA256_SSWU_RO_: Suite<WeCurveID> = Suite {
 pub static BLS12381G1_XMDSHA256_SVDW_NU_: Suite<WeCurveID> = Suite {
     name: "BLS12381G1_XMD:SHA-256_SVDW_NU_",
     curve: BLS12381G1,
-    h: HashID::SHA256,
+    k: 128,
+    exp: ExpID::XMD(HashID::SHA256),
     map: MapID::SVDW(-3),
     l: 64,
     ro: false,
