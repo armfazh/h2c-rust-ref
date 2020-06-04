@@ -1,6 +1,12 @@
 name: Rustico
 
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   Testing:
@@ -9,7 +15,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Linting
+      run: cargo clippy
     - name: Building
-      run: cargo build
+      run: cargo build --release --all-features
     - name: Testing
       run: cargo test

@@ -1,3 +1,4 @@
+use atomic_refcell::AtomicRefCell;
 use libtest_mimic::{run_tests, Arguments, Outcome, Test};
 
 use std::fs::{read_dir, File};
@@ -48,21 +49,22 @@ fn expander() {
 }
 
 fn do_test(Test { data, .. }: &Test<ExpanderVector>) -> Outcome {
-    let mut exp: Box<dyn Expander> = match data.hash.as_str() {
+    let exp: Box<dyn Expander> = match data.hash.as_str() {
         "SHA256" => Box::new(ExpanderXmd {
             dst: Vec::from(data.dst.as_bytes()),
+            dst_prime: AtomicRefCell::new(None),
             id: HashID::SHA256,
         }),
         "SHA512" => Box::new(ExpanderXmd {
             dst: Vec::from(data.dst.as_bytes()),
+            dst_prime: AtomicRefCell::new(None),
             id: HashID::SHA512,
         }),
         "SHAKE_128" => return Outcome::Ignored,
         _ => unimplemented!(),
     };
-    exp.construct_dst_prime();
     for v in data.vectors.iter() {
-        let len = usize::from_str_radix(&v.len_in_bytes.trim_start_matches("0x"), 16).unwrap();
+        let len = usize::from_str_radix(v.len_in_bytes.trim_start_matches("0x"), 16).unwrap();
         let got = exp.expand(v.msg.as_bytes(), len);
         let want = hex::decode(&v.uniform_bytes).unwrap();
         if got != want {

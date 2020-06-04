@@ -14,12 +14,12 @@ name = "h2c"
 harness = false
 
 [dependencies]
-num-bigint = "0.2.6"
-sha2 = "0.8.1"
+atomic_refcell = "0.1.6"
 digest = "0.8.1"
 lazy_static = "1.4.0"
-redox-ecc = { path = "../redox-ecc"}
-# redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.1" }
+num-bigint = "0.2.6"
+sha2 = "0.8.1"
+redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.2" }
 
 [dev-dependencies]
 criterion = "0.3.2"

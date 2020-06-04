@@ -1,3 +1,5 @@
+use atomic_refcell::AtomicRefCell;
+
 use std::collections::HashMap;
 
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve};
@@ -20,11 +22,11 @@ impl GetHashToCurve for Suite<MtCurveID> {
             MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z))),
             _ => unimplemented!(),
         };
-        let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {
+        let exp: Box<dyn Expander> = Box::new(ExpanderXmd {
             dst: dst.to_vec(),
+            dst_prime: AtomicRefCell::new(None),
             id: self.h,
         });
-        exp.construct_dst_prime();
         let hash_to_field: Box<dyn HashToField<F = <Curve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
