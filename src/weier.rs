@@ -9,7 +9,8 @@ use redox_ecc::ops::FromFactory;
 use redox_ecc::weierstrass::{Curve, SSWU, SSWUAB0, SVDW};
 
 use crate::api::{Encoding, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
-use crate::fp::{Expander, ExpanderXmd, FpHasher};
+use crate::expander::{Expander, ExpanderXmd};
+use crate::fp::FpHasher;
 use crate::register_in_map;
 
 impl GetHashToCurve for Suite<WeCurveID> {

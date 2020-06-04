@@ -11,14 +11,14 @@ use redox_ecc::ops::FromFactory;
 use h2c_rust_ref::{GetHashToCurve, SUITES_EDWARDS, SUITES_MONTGOMERY, SUITES_WEIERSTRASS};
 
 #[test]
-fn vectors() {
+fn suites() {
     let args = Arguments::from_args();
     let mut tests_weierstrass = Vec::<Test<SuiteVector>>::new();
     let mut tests_montgomery = Vec::<Test<SuiteVector>>::new();
     let mut tests_edwards = Vec::<Test<SuiteVector>>::new();
     let mut tests_ignored = Vec::<Test<SuiteVector>>::new();
 
-    for filename in read_dir("./tests/testdata/suites").unwrap() {
+    for filename in read_dir("./tests/testdata").unwrap() {
         let file = File::open(filename.unwrap().path()).unwrap();
         let u: SuiteVector = serde_json::from_reader(BufReader::new(file)).unwrap();
         let key = u.ciphersuite.clone();
