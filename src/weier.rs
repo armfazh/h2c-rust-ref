@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use redox_ecc::ellipticcurve::{EllipticCurve, Isogeny, MapToCurve};
-use redox_ecc::field::Sgn0Endianness;
 use redox_ecc::instances::{
     get_isogeny_bls12381g1, get_isogeny_secp256k1, GetCurve, WeCurveID, BLS12381G1, P256, P384,
     P521, SECP256K1,
@@ -29,23 +28,10 @@ impl GetHashToCurve for Suite<WeCurveID> {
                 } else {
                     unimplemented!()
                 };
-                Box::new(SSWUAB0::new(
-                    curve.clone(),
-                    f.from(z),
-                    Sgn0Endianness::LittleEndian,
-                    iso,
-                ))
+                Box::new(SSWUAB0::new(curve.clone(), f.from(z), iso))
             }
-            MapID::SSWU(z) => Box::new(SSWU::new(
-                curve.clone(),
-                f.from(z),
-                Sgn0Endianness::LittleEndian,
-            )),
-            MapID::SVDW(z) => Box::new(SVDW::new(
-                curve.clone(),
-                f.from(z),
-                Sgn0Endianness::LittleEndian,
-            )),
+            MapID::SSWU(z) => Box::new(SSWU::new(curve.clone(), f.from(z))),
+            MapID::SVDW(z) => Box::new(SVDW::new(curve.clone(), f.from(z))),
             _ => unimplemented!(),
         };
         let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {

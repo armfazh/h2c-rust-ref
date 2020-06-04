@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use redox_ecc::edwards::{Curve as EdCurve, Ell2};
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve, RationalMap};
-use redox_ecc::field::Sgn0Endianness;
 use redox_ecc::instances::{
     edwards25519_to_curve25519, edwards448_to_curve448, EdCurveID, GetCurve, EDWARDS25519,
     EDWARDS448,
@@ -29,12 +28,7 @@ impl GetHashToCurve for Suite<EdCurveID> {
                 None
             };
         let map_to_curve: Box<dyn MapToCurve<E = EdCurve>> = match self.map {
-            MapID::ELL2(z) => Box::new(Ell2::new(
-                curve.clone(),
-                f.from(z),
-                Sgn0Endianness::LittleEndian,
-                ratmap,
-            )),
+            MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z), ratmap)),
             _ => unimplemented!(),
         };
         let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {

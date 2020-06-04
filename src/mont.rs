@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use redox_ecc::ellipticcurve::{EllipticCurve, MapToCurve};
-use redox_ecc::field::Sgn0Endianness;
 use redox_ecc::instances::{GetCurve, MtCurveID, CURVE25519, CURVE448};
 use redox_ecc::montgomery::{Curve, Ell2};
 use redox_ecc::ops::FromFactory;
@@ -17,11 +16,7 @@ impl GetHashToCurve for Suite<MtCurveID> {
         let f = curve.get_field();
         let cofactor = curve.new_scalar(curve.get_cofactor());
         let map_to_curve: Box<dyn MapToCurve<E = Curve>> = match self.map {
-            MapID::ELL2(z) => Box::new(Ell2::new(
-                curve.clone(),
-                f.from(z),
-                Sgn0Endianness::LittleEndian,
-            )),
+            MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z))),
             _ => unimplemented!(),
         };
         let mut exp: Box<dyn Expander> = Box::new(ExpanderXmd {
