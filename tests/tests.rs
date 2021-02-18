@@ -62,6 +62,7 @@ fn run_test_m(Test { data, .. }: &Test<SuiteVector>) -> Outcome {
 fn tt<T>(s: &HashMap<String, T>, u: &SuiteVector) -> Outcome
 where
     T: GetHashToCurve,
+    for<'a> <<T as GetHashToCurve>::E as EllipticCurve>::F: FromFactory<&'a str>,
 {
     match s.get(&u.ciphersuite) {
         None => Outcome::Ignored,
