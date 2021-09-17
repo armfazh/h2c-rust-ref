@@ -5,12 +5,14 @@ use redox_ecc::instances::GetCurve;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HashID {
     SHA256,
+    SHA384,
     SHA512,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum XofID {
     SHAKE128,
+    SHAKE256,
 }
 
 /// HashToField hashes a string msg of any length into an element of a field F.
