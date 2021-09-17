@@ -1,9 +1,9 @@
 use atomic_refcell::AtomicRefCell;
 use digest::{DynDigest, ExtendableOutput, Update};
-use sha2::{Digest as sha2_digest, Sha256, Sha512};
-use sha3::Shake128;
+use sha2::{Sha256, Sha384, Sha512};
+use sha3::{Shake128, Shake256};
 
-use crate::api::{HashID, XofID};
+use crate::api::{ExpID, HashID, XofID};
 
 pub trait Expander {
     fn construct_dst_prime(&self) -> Vec<u8>;
@@ -14,28 +14,24 @@ const MAX_DST_LENGTH: usize = 255;
 lazy_static! {
 static ref LONG_DST_PREFIX: Vec<u8> = vec![
     //'H', '2', 'C', '-', 'O', 'V', 'E', 'R', 'S', 'I', 'Z', 'E', '-', 'D', 'S', 'T', '-',
-    0x48, 0x32, 0x43, 0x2d, 0x4f, 0x56, 0x45, 0x52, 0x53, 0x49, 0x5a, 0x45, 0x2d, 0x44, 0x53, 0x54,
+    0x48, 0x32, 0x43, 0x2d, 0x4f, 0x56, 0x45, 0x52, 0x53, 0x49, 0x5a, 0x45, 0x2d, 0x44, 0x53, 0x54, 0x2d,
 ];
 }
 
-pub(super) struct ExpanderXof {
-    pub(super) id: XofID,
+pub(super) struct ExpanderXof<T: Update + Clone + ExtendableOutput> {
+    pub(super) xofer: T,
     pub(super) dst: Vec<u8>,
-    pub(super) k: Option<usize>,
+    pub(super) k: usize,
     pub(super) dst_prime: AtomicRefCell<Option<Vec<u8>>>,
 }
 
-impl Expander for ExpanderXof {
+impl<T: Update + Clone + ExtendableOutput> Expander for ExpanderXof<T> {
     fn construct_dst_prime(&self) -> Vec<u8> {
         let mut dst_prime = if self.dst.len() > MAX_DST_LENGTH {
-            let mut hasher = match self.id {
-                XofID::SHAKE128 => Shake128::default(),
-            };
-            hasher.update(&LONG_DST_PREFIX.clone());
-            hasher.update(&self.dst);
-            hasher
-                .finalize_boxed((2 * self.k.unwrap() + 7) >> 3)
-                .to_vec()
+            let mut xofer = self.xofer.clone();
+            xofer.update(&LONG_DST_PREFIX.clone());
+            xofer.update(&self.dst);
+            xofer.finalize_boxed((2 * self.k + 7) >> 3).to_vec()
         } else {
             self.dst.clone()
         };
@@ -50,32 +46,28 @@ impl Expander for ExpanderXof {
             .clone();
         let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
 
-        let mut hasher = match self.id {
-            XofID::SHAKE128 => Shake128::default(),
-        };
-        hasher.update(msg);
-        hasher.update(lib_str);
-        hasher.update(&dst_prime);
-        hasher.finalize_boxed(n).to_vec()
+        let mut xofer = self.xofer.clone();
+        xofer.update(msg);
+        xofer.update(lib_str);
+        xofer.update(&dst_prime);
+        xofer.finalize_boxed(n).to_vec()
     }
 }
 
-pub(super) struct ExpanderXmd {
+pub(super) struct ExpanderXmd<T: DynDigest + Clone> {
+    pub(super) hasher: T,
     pub(super) dst: Vec<u8>,
+    pub(super) block_size: usize,
     pub(super) dst_prime: AtomicRefCell<Option<Vec<u8>>>,
-    pub(super) id: HashID,
 }
 
-impl Expander for ExpanderXmd {
+impl<T: DynDigest + Clone> Expander for ExpanderXmd<T> {
     fn construct_dst_prime(&self) -> Vec<u8> {
         let mut dst_prime = if self.dst.len() > MAX_DST_LENGTH {
-            let mut hasher: Box<dyn DynDigest> = match self.id {
-                HashID::SHA256 => Box::new(Sha256::new()),
-                HashID::SHA512 => Box::new(Sha512::new()),
-            };
+            let mut hasher = self.hasher.clone();
             hasher.update(&LONG_DST_PREFIX);
             hasher.update(&self.dst);
-            (&hasher.finalize()).to_vec()
+            hasher.finalize_reset().to_vec()
         } else {
             self.dst.clone()
         };
@@ -83,10 +75,7 @@ impl Expander for ExpanderXmd {
         dst_prime
     }
     fn expand(&self, msg: &[u8], n: usize) -> Vec<u8> {
-        let (mut hasher, block_size): (Box<dyn DynDigest>, usize) = match self.id {
-            HashID::SHA256 => (Box::new(Sha256::new()), 64),
-            HashID::SHA512 => (Box::new(Sha512::new()), 128),
-        };
+        let mut hasher = self.hasher.clone();
         let b_len = hasher.output_size();
         let ell = (n + (b_len - 1)) / b_len;
         if ell > 255 {
@@ -97,7 +86,7 @@ impl Expander for ExpanderXmd {
             .borrow_mut()
             .get_or_insert(self.construct_dst_prime())
             .clone();
-        let z_pad: Vec<u8> = vec![0; block_size];
+        let z_pad: Vec<u8> = vec![0; self.block_size];
         let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
 
         hasher.reset();
@@ -134,6 +123,48 @@ fn xor<'a>(x: &'a [u8], y: &'a [u8]) -> Vec<u8> {
         z[i] = x[i] ^ y[i];
     }
     z.to_vec()
+}
+
+pub fn get_expander(id: ExpID, _dst: &[u8], k: usize) -> Box<dyn Expander> {
+    let dst_prime = AtomicRefCell::new(None);
+    let dst = _dst.to_vec();
+
+    match id {
+        ExpID::XMD(h) => match h {
+            HashID::SHA256 => Box::new(ExpanderXmd {
+                hasher: Sha256::default(),
+                block_size: 64,
+                dst,
+                dst_prime,
+            }),
+            HashID::SHA384 => Box::new(ExpanderXmd {
+                hasher: Sha384::default(),
+                block_size: 128,
+                dst,
+                dst_prime,
+            }),
+            HashID::SHA512 => Box::new(ExpanderXmd {
+                hasher: Sha512::default(),
+                block_size: 128,
+                dst,
+                dst_prime,
+            }),
+        },
+        ExpID::XOF(x) => match x {
+            XofID::SHAKE128 => Box::new(ExpanderXof {
+                xofer: Shake128::default(),
+                k,
+                dst,
+                dst_prime,
+            }),
+            XofID::SHAKE256 => Box::new(ExpanderXof {
+                xofer: Shake256::default(),
+                k,
+                dst,
+                dst_prime,
+            }),
+        },
+    }
 }
 
 #[cfg(test)]

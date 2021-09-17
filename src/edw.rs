@@ -1,5 +1,3 @@
-use atomic_refcell::AtomicRefCell;
-
 use std::collections::HashMap;
 
 use redox_ecc::edwards::{Curve as EdCurve, Ell2};
@@ -12,7 +10,7 @@ use redox_ecc::montgomery::Curve as MtCurve;
 use redox_ecc::ops::FromFactory;
 
 use crate::api::{Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
-use crate::expander::{Expander, ExpanderXmd, ExpanderXof};
+use crate::expander::get_expander;
 use crate::fp::FpHasher;
 use crate::register_in_map;
 
@@ -34,19 +32,7 @@ impl GetHashToCurve for Suite<EdCurveID> {
             MapID::ELL2(z) => Box::new(Ell2::new(curve.clone(), f.from(z), ratmap)),
             _ => unimplemented!(),
         };
-        let exp: Box<dyn Expander> = match self.exp {
-            ExpID::XMD(h) => Box::new(ExpanderXmd {
-                dst: dst.to_vec(),
-                dst_prime: AtomicRefCell::new(None),
-                id: h,
-            }),
-            ExpID::XOF(x) => Box::new(ExpanderXof {
-                dst: dst.to_vec(),
-                k: Some(self.k),
-                dst_prime: AtomicRefCell::new(None),
-                id: x,
-            }),
-        };
+        let exp = get_expander(self.exp, dst, self.k);
         let hash_to_field: Box<dyn HashToField<F = <EdCurve as EllipticCurve>::F>> =
             Box::new(FpHasher { f, exp, l: self.l });
         Box::new(Encoding {
