@@ -1,5 +1,5 @@
 use atomic_refcell::AtomicRefCell;
-use digest::{DynDigest, ExtendableOutput, Input};
+use digest::{DynDigest, ExtendableOutput, Update};
 use sha2::{Digest as sha2_digest, Sha256, Sha512};
 use sha3::Shake128;
 
@@ -31,9 +31,11 @@ impl Expander for ExpanderXof {
             let mut hasher = match self.id {
                 XofID::SHAKE128 => Shake128::default(),
             };
-            hasher.input(&LONG_DST_PREFIX.clone());
-            hasher.input(&self.dst);
-            hasher.vec_result((2 * self.k.unwrap() + 7) >> 3)
+            hasher.update(&LONG_DST_PREFIX.clone());
+            hasher.update(&self.dst);
+            hasher
+                .finalize_boxed((2 * self.k.unwrap() + 7) >> 3)
+                .to_vec()
         } else {
             self.dst.clone()
         };
@@ -51,10 +53,10 @@ impl Expander for ExpanderXof {
         let mut hasher = match self.id {
             XofID::SHAKE128 => Shake128::default(),
         };
-        hasher.input(msg);
-        hasher.input(lib_str);
-        hasher.input(&dst_prime);
-        hasher.vec_result(n)
+        hasher.update(msg);
+        hasher.update(lib_str);
+        hasher.update(&dst_prime);
+        hasher.finalize_boxed(n).to_vec()
     }
 }
 
@@ -71,9 +73,9 @@ impl Expander for ExpanderXmd {
                 HashID::SHA256 => Box::new(Sha256::new()),
                 HashID::SHA512 => Box::new(Sha512::new()),
             };
-            hasher.input(&LONG_DST_PREFIX);
-            hasher.input(&self.dst);
-            (&hasher.result()).to_vec()
+            hasher.update(&LONG_DST_PREFIX);
+            hasher.update(&self.dst);
+            (&hasher.finalize()).to_vec()
         } else {
             self.dst.clone()
         };
@@ -99,27 +101,27 @@ impl Expander for ExpanderXmd {
         let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
 
         hasher.reset();
-        hasher.input(&z_pad);
-        hasher.input(msg);
-        hasher.input(lib_str);
-        hasher.input(&[0u8]);
-        hasher.input(&dst_prime);
-        let b0 = hasher.result_reset();
+        hasher.update(&z_pad);
+        hasher.update(msg);
+        hasher.update(lib_str);
+        hasher.update(&[0u8]);
+        hasher.update(&dst_prime);
+        let b0 = hasher.finalize_reset();
 
         hasher.reset();
-        hasher.input(&b0);
-        hasher.input(&[1u8]);
-        hasher.input(&dst_prime);
-        let mut bi = hasher.result_reset();
+        hasher.update(&b0);
+        hasher.update(&[1u8]);
+        hasher.update(&dst_prime);
+        let mut bi = hasher.finalize_reset();
 
         let mut pseudo = Vec::new();
         pseudo.extend_from_slice(&bi);
         for i in 2..(ell + 1) {
             hasher.reset();
-            hasher.input(&xor(&bi, &b0));
-            hasher.input(&[i as u8]);
-            hasher.input(&dst_prime);
-            bi = hasher.result_reset();
+            hasher.update(&xor(&bi, &b0));
+            hasher.update(&[i as u8]);
+            hasher.update(&dst_prime);
+            bi = hasher.finalize_reset();
             pseudo.extend_from_slice(&bi);
         }
         pseudo[0..n].to_vec()

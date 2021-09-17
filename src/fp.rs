@@ -22,9 +22,9 @@ impl HashToField for FpHasher {
         for i in 0..count {
             let offset: usize = self.l * (i * M);
             let t = &pseudo[offset..(offset + self.l)];
-            match self.f.from_bytes_be(&t) {
+            match self.f.from_bytes_be(t) {
                 Ok(v) => u.push(v),
-                Err(e) => panic!(e),
+                Err(e) => panic!("{}", e),
             }
         }
         u
