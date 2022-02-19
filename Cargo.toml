@@ -1,10 +1,10 @@
 [package]
 name = "h2c-rust-ref"
-version = "8.0.1"
-authors = ["armfazh <armfazh@cloudflare.com>"]
-edition = "2018"
+version = "14.0.0"
+authors = ["Armando Faz Hernandez"]
+edition = "2021"
 description = "hash to curve reference implementation"
-keywords = ["elliptic curve", "math", "crypto", "ecc", "elliptic", "hash to curve"]
+keywords = ["elliptic curves", "math", "crypto", "ecc", "elliptic", "hash to curve"]
 categories = ["cryptography"]
 readme = "readme.md"
 license = "BSD-3-Clause"
@@ -14,18 +14,18 @@ name = "h2c"
 harness = false
 
 [dependencies]
-atomic_refcell = "0.1.6"
-digest = "0.9.0"
+atomic_refcell = "0.1.8"
+digest = "0.10.3"
 lazy_static = "1.4.0"
-num-bigint = "0.4.2"
-sha2 = "0.9.0"
-sha3 = "0.9.1"
-redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.2" }
+num-bigint = "0.4.3"
+sha2 = "0.10.2"
+sha3 = "0.10.1"
+redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.3" }
 
 [dev-dependencies]
-criterion = "0.3.2"
+criterion = "0.3.5"
 hex = "0.4"
 libtest-mimic = "0.3.0"
-serde = "1.0.110"
-serde_json = "1.0.53"
-serde_derive = "1.0.110"
+serde = "1.0.136"
+serde_json = "1.0.79"
+serde_derive = "1.0.136"

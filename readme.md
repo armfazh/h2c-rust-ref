@@ -23,14 +23,19 @@ including side-channel attacks. It **MUST NOT** be used in production systems.
 -   No specific architecture optimizations.
 -   No side-channel protection, see [Warning](#Warning) section.
 
-#### Development branch: [master](https://github.com/armfazh/h2c-rust-ref/tree/master)
+**Development branch** [master](https://github.com/armfazh/h2c-rust-ref/tree/master)
 
-#### Draft versions implemented:
- -   [v12](https://github.com/armfazh/h2c-rust-ref/tree/v12.0.0) (latest)
- -   [v08](https://github.com/armfazh/h2c-rust-ref/tree/v8.0.0)
- -   [v07](https://github.com/armfazh/h2c-rust-ref/tree/v7.0.0)
- -   [v06](https://github.com/armfazh/h2c-rust-ref/tree/v6.0.0)
- -   [v05](https://github.com/armfazh/h2c-rust-ref/tree/v5.0.0)
+#### Draft versions implemented
+ Latest: [v14]
+
+ Previous: [v12], [v08], [v07], [v06], [v05]
+
+ [v14]: https://github.com/armfazh/h2c-rust-ref/tree/v14.0.0
+ [v12]: https://github.com/armfazh/h2c-rust-ref/tree/v12.0.0
+ [v08]: https://github.com/armfazh/h2c-rust-ref/tree/v8.0.0
+ [v07]: https://github.com/armfazh/h2c-rust-ref/tree/v7.0.0
+ [v06]: https://github.com/armfazh/h2c-rust-ref/tree/v6.0.0
+ [v05]: https://github.com/armfazh/h2c-rust-ref/tree/v5.0.0
 
 #### Compatible Implementations
  -   [Sage](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve/tree/master/poc)
@@ -46,4 +51,4 @@ BSD 3-Clause License
 
 ### Contact
 
-Feel free to open a github issue for anything related to the implementation, otherwise [e-mail](draft-irtf-cfrg-hash-to-curve@ietf.org) authors of the draft.
+Feel free to open a github issue for anything related to the implementation, otherwise [e-mail](mailto:draft-irtf-cfrg-hash-to-curve@ietf.org) authors of the draft.

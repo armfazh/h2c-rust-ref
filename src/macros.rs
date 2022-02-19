@@ -8,6 +8,6 @@ macro_rules! register_in_map {
                 h.insert(String::from($elem.name), $elem);
             )+
             h
-        };
+        }
     }
 }
