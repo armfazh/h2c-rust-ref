@@ -44,6 +44,11 @@ impl<T: Update + Clone + ExtendableOutput> Expander for ExpanderXof<T> {
             .borrow_mut()
             .get_or_insert(self.construct_dst_prime())
             .clone();
+
+        if n > (u16::MAX as usize) || dst_prime.len() > (u8::MAX as usize) {
+            panic!("requested too many bytes")
+        }
+
         let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
 
         let mut xofer = self.xofer.clone();
@@ -78,14 +83,19 @@ impl<T: DynDigest + Clone> Expander for ExpanderXmd<T> {
         let mut hasher = self.hasher.clone();
         let b_len = hasher.output_size();
         let ell = (n + (b_len - 1)) / b_len;
-        if ell > 255 {
-            panic!("too big")
-        }
         let dst_prime = self
             .dst_prime
             .borrow_mut()
             .get_or_insert(self.construct_dst_prime())
             .clone();
+
+        if ell > (u8::MAX as usize)
+            || n > (u16::MAX as usize)
+            || dst_prime.len() > (u8::MAX as usize)
+        {
+            panic!("requested too many bytes")
+        }
+
         let z_pad: Vec<u8> = vec![0; self.block_size];
         let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
 
