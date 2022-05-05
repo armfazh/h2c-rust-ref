@@ -5,7 +5,9 @@ use redox_ecc::instances::{GetCurve, MtCurveID, CURVE25519, CURVE448};
 use redox_ecc::montgomery::{Curve, Ell2};
 use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
+use crate::api::{
+    Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite, XofID,
+};
 use crate::expander::get_expander;
 use crate::fp::FpHasher;
 use crate::register_in_map;
@@ -39,8 +41,8 @@ lazy_static! {
         CURVE25519_XMDSHA256_ELL2_RO_,
         CURVE25519_XMDSHA512_ELL2_NU_,
         CURVE25519_XMDSHA512_ELL2_RO_,
-        CURVE448_XMDSHA512_ELL2_NU_,
-        CURVE448_XMDSHA512_ELL2_RO_
+        CURVE448_XOFSHAKE256_ELL2_NU_,
+        CURVE448_XOFSHAKE256_ELL2_RO_
     ]);
 }
 
@@ -74,17 +76,17 @@ pub static CURVE25519_XMDSHA512_ELL2_RO_: Suite<MtCurveID> = Suite {
     ..CURVE25519_XMDSHA512_ELL2_NU_
 };
 
-pub static CURVE448_XMDSHA512_ELL2_NU_: Suite<MtCurveID> = Suite {
-    name: "curve448_XMD:SHA-512_ELL2_NU_",
+pub static CURVE448_XOFSHAKE256_ELL2_NU_: Suite<MtCurveID> = Suite {
+    name: "curve448_XOF:SHAKE256_ELL2_NU_",
     curve: CURVE448,
     map: MapID::ELL2(-1),
     k: 224,
-    exp: ExpID::XMD(HashID::SHA512),
+    exp: ExpID::XOF(XofID::SHAKE256),
     l: 84,
     ro: false,
 };
-pub static CURVE448_XMDSHA512_ELL2_RO_: Suite<MtCurveID> = Suite {
-    name: "curve448_XMD:SHA-512_ELL2_RO_",
+pub static CURVE448_XOFSHAKE256_ELL2_RO_: Suite<MtCurveID> = Suite {
+    name: "curve448_XOF:SHAKE256_ELL2_RO_",
     ro: true,
-    ..CURVE448_XMDSHA512_ELL2_NU_
+    ..CURVE448_XOFSHAKE256_ELL2_NU_
 };
