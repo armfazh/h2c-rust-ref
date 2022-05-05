@@ -9,7 +9,9 @@ use redox_ecc::instances::{
 use redox_ecc::montgomery::Curve as MtCurve;
 use redox_ecc::ops::FromFactory;
 
-use crate::api::{Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite};
+use crate::api::{
+    Encoding, ExpID, GetHashToCurve, HashID, HashToCurve, HashToField, MapID, Suite, XofID,
+};
 use crate::expander::get_expander;
 use crate::fp::FpHasher;
 use crate::register_in_map;
@@ -51,8 +53,8 @@ lazy_static! {
         EDWARDS25519_XMDSHA256_ELL2_RO_,
         EDWARDS25519_XMDSHA512_ELL2_NU_,
         EDWARDS25519_XMDSHA512_ELL2_RO_,
-        EDWARDS448_XMDSHA512_ELL2_NU_,
-        EDWARDS448_XMDSHA512_ELL2_RO_
+        EDWARDS448_XOFSHAKE256_ELL2_NU_,
+        EDWARDS448_XOFSHAKE256_ELL2_RO_
     ]);
 }
 
@@ -86,17 +88,17 @@ pub static EDWARDS25519_XMDSHA512_ELL2_RO_: Suite<EdCurveID> = Suite {
     ..EDWARDS25519_XMDSHA512_ELL2_NU_
 };
 
-pub static EDWARDS448_XMDSHA512_ELL2_NU_: Suite<EdCurveID> = Suite {
-    name: "edwards448_XMD:SHA-512_ELL2_NU_",
+pub static EDWARDS448_XOFSHAKE256_ELL2_NU_: Suite<EdCurveID> = Suite {
+    name: "edwards448_XOF:SHAKE256_ELL2_NU_",
     curve: EDWARDS448,
     map: MapID::ELL2(-1),
     k: 224,
-    exp: ExpID::XMD(HashID::SHA512),
+    exp: ExpID::XOF(XofID::SHAKE256),
     l: 84,
     ro: false,
 };
-pub static EDWARDS448_XMDSHA512_ELL2_RO_: Suite<EdCurveID> = Suite {
-    name: "edwards448_XMD:SHA-512_ELL2_RO_",
+pub static EDWARDS448_XOFSHAKE256_ELL2_RO_: Suite<EdCurveID> = Suite {
+    name: "edwards448_XOF:SHAKE256_ELL2_RO_",
     ro: true,
-    ..EDWARDS448_XMDSHA512_ELL2_NU_
+    ..EDWARDS448_XOFSHAKE256_ELL2_NU_
 };
