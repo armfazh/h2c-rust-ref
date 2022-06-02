@@ -43,7 +43,7 @@ including side-channel attacks. It **MUST NOT** be used in production systems.
 
 ### Internals
 
-![hash to curve](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve/blob/master/drawings/diag.png)
+![hash to curve](https://github.com/cfrg/draft-irtf-cfrg-hash-to-curve/blob/main/drawings/diag.png)
 
 ### License
 
