@@ -14,6 +14,8 @@ name = "h2c"
 harness = false
 
 [dependencies]
+arrayvec = "0.7.2"
+allocation-counter = "0.5.0"
 atomic_refcell = "0.1.8"
 digest = "0.10.3"
 lazy_static = "1.4.0"

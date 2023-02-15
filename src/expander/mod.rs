@@ -4,6 +4,9 @@ use sha2::{Sha256, Sha384, Sha512};
 use sha3::{Shake128, Shake256};
 
 use crate::api::{ExpID, HashID, XofID};
+use arrayvec::ArrayVec;
+
+
 
 pub trait Expander {
     fn construct_dst_prime(&self) -> Vec<u8>;
@@ -17,12 +20,62 @@ static ref LONG_DST_PREFIX: Vec<u8> = vec![
     0x48, 0x32, 0x43, 0x2d, 0x4f, 0x56, 0x45, 0x52, 0x53, 0x49, 0x5a, 0x45, 0x2d, 0x44, 0x53, 0x54, 0x2d,
 ];
 }
+pub trait Expander2 {
+    fn set_dst(&mut self, dst: &[u8]);
+    fn expand<const LENGTH: usize>(&self, msg: &[u8]) -> [u8; LENGTH];
+}
 
-pub(super) struct ExpanderXof<T: Update + Clone + ExtendableOutput> {
-    pub(super) xofer: T,
-    pub(super) dst: Vec<u8>,
-    pub(super) k: usize,
-    pub(super) dst_prime: AtomicRefCell<Option<Vec<u8>>>,
+#[derive(Debug)]
+pub struct Expander2Xof<T: Update + Clone + ExtendableOutput> {
+    pub xofer: T,
+    pub dst_prime: ArrayVec::<u8,{MAX_DST_LENGTH+1}>,
+    pub k:usize,
+}
+
+// #![feature(generic_const_exprs)]
+
+impl<T: Update + Clone + ExtendableOutput> Expander2 for Expander2Xof<T> {
+    fn set_dst(&mut self, dst: &[u8]) {
+        self.dst_prime = ArrayVec::new_const();
+        if dst.len() > MAX_DST_LENGTH {
+            let mut xofer = self.xofer.clone();
+            xofer.update(&LONG_DST_PREFIX.clone());
+            xofer.update(&dst);
+            xofer.finalize_xof_into(self.dst_prime.as_mut_slice());            
+        } else {
+            self.dst_prime.try_extend_from_slice(dst).unwrap()
+        };
+    }
+    
+    fn expand<const LENGTH: usize>(&self, msg: &[u8]) -> [u8; LENGTH]{
+        let mut out =         [0;LENGTH];
+        let dst_prime = self
+            .dst_prime
+            .clone();
+
+        let n = LENGTH;
+        if n > (u16::MAX as usize) || dst_prime.len() > (u8::MAX as usize) {
+            panic!("requested too many bytes")
+        }
+
+        let lib_str = &[((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8];
+
+        let mut xofer = self.xofer.clone();
+        xofer.update(msg);
+        xofer.update(lib_str);
+        xofer.update(&dst_prime);
+        xofer.finalize_xof_into(&mut out);
+        out
+    }
+}
+
+#[derive(Debug)]
+pub struct ExpanderXof<
+T: Update + Clone + ExtendableOutput> {
+    pub xofer: T,
+    pub dst: Vec<u8>,
+    pub k: usize,
+    pub dst_prime: AtomicRefCell<Option<Vec<u8>>>,
 }
 
 impl<T: Update + Clone + ExtendableOutput> Expander for ExpanderXof<T> {

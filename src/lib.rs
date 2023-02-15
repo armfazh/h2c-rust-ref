@@ -34,7 +34,7 @@ mod macros;
 
 mod api;
 mod edw;
-mod expander;
+pub mod expander;
 mod fp;
 mod mont;
 mod weier;
