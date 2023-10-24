@@ -1,4 +1,4 @@
-use libtest_mimic::{run_tests, Arguments, Outcome, Test};
+use libtest_mimic::{run, Arguments, Failed, Trial};
 
 use std::fs::{read_dir, File};
 use std::io::BufReader;
@@ -30,26 +30,23 @@ pub struct TestExpander {
 #[test]
 fn expander() {
     let args = Arguments::from_args();
-    let mut tests = Vec::<Test<ExpanderVector>>::new();
+    let mut tests = Vec::<Trial>::new();
 
     for filename in read_dir("./src/expander/testdata").unwrap() {
         let ff = filename.unwrap();
         let file = File::open(ff.path()).unwrap();
         let u: ExpanderVector = serde_json::from_reader(BufReader::new(file)).unwrap();
 
-        tests.push(Test {
-            name: ff.file_name().to_str().unwrap().to_string(),
-            data: u,
-            kind: String::default(),
-            is_ignored: false,
-            is_bench: false,
-        });
+        tests.push(Trial::test(
+            ff.file_name().to_str().unwrap().to_string(),
+            move || do_test(&u),
+        ));
     }
 
-    run_tests(&args, tests, do_test).exit_if_failed();
+    run(&args, tests).exit_if_failed();
 }
 
-fn do_test(Test { data, .. }: &Test<ExpanderVector>) -> Outcome {
+fn do_test(data: &ExpanderVector) -> Result<(), Failed> {
     let exp_id = match data.hash.as_str() {
         "SHA256" => ExpID::XMD(HashID::SHA256),
         "SHA384" => ExpID::XMD(HashID::SHA384),
@@ -64,13 +61,12 @@ fn do_test(Test { data, .. }: &Test<ExpanderVector>) -> Outcome {
         let got = exp.expand(v.msg.as_bytes(), len);
         let want = hex::decode(&v.uniform_bytes).unwrap();
         if got != want {
-            return Outcome::Failed {
-                msg: Some(format!(
-                    "Expander: {}\nVector:   {}\ngot:  {:?}\nwant: {:?}",
-                    data.hash, v.msg, got, want,
-                )),
-            };
+            return Err(format!(
+                "Expander: {}\nVector:   {}\ngot:  {:?}\nwant: {:?}",
+                data.hash, v.msg, got, want,
+            )
+            .into());
         }
     }
-    Outcome::Passed
+    Ok(())
 }

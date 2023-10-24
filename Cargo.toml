@@ -14,18 +14,18 @@ name = "h2c"
 harness = false
 
 [dependencies]
-atomic_refcell = "0.1.8"
-digest = "0.10.3"
+atomic_refcell = "0.1.13"
+digest = "0.10.7"
 lazy_static = "1.4.0"
-num-bigint = "0.4.3"
-sha2 = "0.10.2"
-sha3 = "0.10.1"
+num-bigint = "0.4.4"
+sha2 = "0.10.8"
+sha3 = "0.10.8"
 redox-ecc = { git = "https://github.com/armfazh/redox-ecc", version = "0.2.3" }
 
 [dev-dependencies]
-criterion = "0.3.5"
-hex = "0.4"
-libtest-mimic = "0.3.0"
-serde = "1.0.136"
-serde_json = "1.0.79"
-serde_derive = "1.0.136"
+criterion = "0.5.1"
+hex = "0.4.3"
+libtest-mimic = "0.6.1"
+serde = "1.0.189"
+serde_json = "1.0.107"
+serde_derive = "1.0.189"

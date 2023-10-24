@@ -4,7 +4,7 @@ use std::io::BufReader;
 
 mod json;
 use json::SuiteVector;
-use libtest_mimic::{run_tests, Arguments, Outcome, Test};
+use libtest_mimic::{run, Arguments, Failed, Trial};
 use redox_ecc::ellipticcurve::EllipticCurve;
 use redox_ecc::ops::FromFactory;
 
@@ -13,59 +13,41 @@ use h2c_rust_ref::{GetHashToCurve, SUITES_EDWARDS, SUITES_MONTGOMERY, SUITES_WEI
 #[test]
 fn suites() {
     let args = Arguments::from_args();
-    let mut tests_weierstrass = Vec::<Test<SuiteVector>>::new();
-    let mut tests_montgomery = Vec::<Test<SuiteVector>>::new();
-    let mut tests_edwards = Vec::<Test<SuiteVector>>::new();
-    let mut tests_ignored = Vec::<Test<SuiteVector>>::new();
+    let mut tests_weierstrass = Vec::<Trial>::new();
+    let mut tests_montgomery = Vec::<Trial>::new();
+    let mut tests_edwards = Vec::<Trial>::new();
+    let mut tests_ignored = Vec::<Trial>::new();
 
     for filename in read_dir("./tests/testdata").unwrap() {
         let file = File::open(filename.unwrap().path()).unwrap();
         let u: SuiteVector = serde_json::from_reader(BufReader::new(file)).unwrap();
         let key = u.ciphersuite.clone();
-        let mut test = Test {
-            name: u.ciphersuite.clone(),
-            data: u,
-            kind: String::default(),
-            is_ignored: false,
-            is_bench: false,
-        };
+        let name = u.ciphersuite.clone();
         if SUITES_WEIERSTRASS.contains_key(&key) {
-            test.is_ignored = false;
-            tests_weierstrass.push(test);
+            tests_weierstrass.push(Trial::test(name, move || tt(&SUITES_WEIERSTRASS, &u)));
         } else if SUITES_MONTGOMERY.contains_key(&key) {
-            test.is_ignored = false;
-            tests_montgomery.push(test);
+            tests_montgomery.push(Trial::test(name, move || tt(&SUITES_MONTGOMERY, &u)));
         } else if SUITES_EDWARDS.contains_key(&key) {
-            test.is_ignored = false;
-            tests_edwards.push(test);
+            tests_edwards.push(Trial::test(name, move || tt(&SUITES_EDWARDS, &u)));
         } else {
-            test.is_ignored = true;
-            tests_ignored.push(test);
+            tests_ignored
+                .push(Trial::test(name, move || Err("ignored".into())).with_ignored_flag(true));
         }
     }
-    run_tests(&args, tests_weierstrass, run_test_w).exit_if_failed();
-    run_tests(&args, tests_edwards, run_test_e).exit_if_failed();
-    run_tests(&args, tests_montgomery, run_test_m).exit_if_failed();
-    run_tests(&args, tests_ignored, run_test_w).exit_if_failed();
+
+    run(&args, tests_weierstrass).exit_if_failed();
+    run(&args, tests_edwards).exit_if_failed();
+    run(&args, tests_montgomery).exit_if_failed();
+    run(&args, tests_ignored).exit_if_failed();
 }
 
-fn run_test_w(Test { data, .. }: &Test<SuiteVector>) -> Outcome {
-    tt(&SUITES_WEIERSTRASS, data)
-}
-fn run_test_e(Test { data, .. }: &Test<SuiteVector>) -> Outcome {
-    tt(&SUITES_EDWARDS, data)
-}
-fn run_test_m(Test { data, .. }: &Test<SuiteVector>) -> Outcome {
-    tt(&SUITES_MONTGOMERY, data)
-}
-
-fn tt<T>(s: &HashMap<String, T>, u: &SuiteVector) -> Outcome
+fn tt<T>(s: &HashMap<String, T>, u: &SuiteVector) -> Result<(), Failed>
 where
     T: GetHashToCurve,
     for<'a> <<T as GetHashToCurve>::E as EllipticCurve>::F: FromFactory<&'a str>,
 {
     match s.get(&u.ciphersuite) {
-        None => Outcome::Ignored,
+        None => Err("suite not found".into()),
         Some(suite) => {
             let h2c = suite.get(u.dst.as_bytes());
             let curve = h2c.get_curve();
@@ -76,15 +58,12 @@ where
                 let y = f.from(&v.p.y);
                 let want = curve.new_point(x, y);
                 if got != want {
-                    return Outcome::Failed {
-                        msg: Some(format!(
-                            "Suite: {}\ngot:  {}\nwant: {}",
-                            u.ciphersuite, got, want
-                        )),
-                    };
+                    return Err(
+                        format!("Suite: {}\ngot:  {}\nwant: {}", u.ciphersuite, got, want).into(),
+                    );
                 }
             }
-            Outcome::Passed
+            Ok(())
         }
     }
 }
