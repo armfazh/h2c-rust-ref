@@ -9,6 +9,10 @@ categories = ["cryptography"]
 readme = "readme.md"
 license = "BSD-3-Clause"
 
+[features]
+# enable support for the standard library
+std = []
+
 [[bench]]
 name = "h2c"
 harness = false

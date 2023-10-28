@@ -27,6 +27,16 @@
 //! ```
 //!
 
+#![no_std]
+
+#[cfg(any(feature = "std", test))]
+#[macro_use]
+extern crate std;
+
+#[cfg(all(not(feature = "std"), not(test)))]
+#[macro_use]
+extern crate core as std;
+
 #[macro_use]
 extern crate lazy_static;
 
